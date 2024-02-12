@@ -96,7 +96,7 @@ def download_url(url, dst):
 
 
 def read_image(path):
-    print('path',path)
+    #print('path',path)
     """Reads image from path using ``PIL.Image``.
 
     Args:

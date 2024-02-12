@@ -93,10 +93,13 @@ def eval_cuhk03(distmat, q_pids, g_pids, q_camids, g_camids, max_rank):
 
 def eval_market1501(distmat, q_pids, g_pids, q_camids, g_camids, max_rank):
     """Evaluation with market1501 metric
-    Key: for each query identity, its gallery images from the same camera view are discarded.
+    Key: for each query identity, its gallery images from the same camera view are discarded.# WRONG FOR ME
     """
     num_q, num_g = distmat.shape
-
+    #print('eval market 1501')
+    #print('distmat',distmat)
+    #print('q_pids',q_pids)
+    #print('g_pids',g_pids)
     if num_g < max_rank:
         max_rank = num_g
         print(
@@ -120,8 +123,8 @@ def eval_market1501(distmat, q_pids, g_pids, q_camids, g_camids, max_rank):
         # remove gallery samples that have the same pid and camid with query
         order = indices[q_idx]
         remove = (g_pids[order] == q_pid) & (g_camids[order] == q_camid)
-        keep = np.invert(remove)
-
+        #keep = np.invert(remove) - in source code. BTW I should keep only with same camera
+        keep = [True] * len(remove) #- in my code
         # compute cmc curve
         raw_cmc = matches[q_idx][
             keep] # binary vector, positions with value 1 are correct matches

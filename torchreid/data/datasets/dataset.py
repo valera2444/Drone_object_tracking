@@ -323,7 +323,7 @@ class ImageDataset(Dataset):
 
     def __getitem__(self, index):
         img_path, pid, camid, dsetid = self.data[index]
-        print('path',img_path)
+        #print('path',img_path)
         img = read_image(img_path)
         if self.transform is not None:
             img = self._transform_image(self.transform, self.k_tfm, img)
@@ -396,10 +396,10 @@ class VideoDataset(Dataset):
         #    raise RuntimeError('transform must not be None')
 
     def __getitem__(self, index):
-        img_paths, pid,dsetid, camid = self.data[index]#, dsetid
+        img_paths, pid, camid,dsetid = self.data[index]#, dsetid
         num_imgs = len(img_paths)
         
-        print('self.data[index]',self.data[index])
+        #print('self.data[index]',self.data[index])
         
         if self.sample_method == 'random':
             # Randomly samples seq_len images from a tracklet of length num_imgs,

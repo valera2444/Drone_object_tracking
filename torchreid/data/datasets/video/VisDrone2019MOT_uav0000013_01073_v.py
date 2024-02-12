@@ -12,7 +12,7 @@ from .. import VideoDataset
 #REMADE ID'S !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #transform shouldnt be None
 TRACKLET_LENGTH = 10
-class VisDrone2019MOT(VideoDataset):
+class VisDrone2019MOT_uav0000013_01073_v(VideoDataset):
     #dataset_dir = 'VisDrone2019-MOT\\'#incorrect
 
     def __init__(self, root='',video_name='',gallery_query_ratio=6, **kwargs):
@@ -39,48 +39,50 @@ class VisDrone2019MOT(VideoDataset):
         #query = ...
         #gallery = ...
 
-        super(VisDrone2019MOT, self).__init__(train, query, gallery, **kwargs)
+        super(VisDrone2019MOT_uav0000013_01073_v, self).__init__(train, query, gallery, **kwargs)
         
     def _prepare_train(self):
         train_dir = 'VisDrone2019-MOT-train\\'
-        abs_train_dir = self.root
+        dataset_name = 'uav0000013_01073_v\\'
+        self.abs_train_dir = osp.join(self.root,train_dir, dataset_name)
         tracklets = []
-        for idx in os.listdir(abs_train_dir):
-            abs_idx = osp.join(abs_train_dir,idx)
+        for idx in os.listdir(self.abs_train_dir):
+            abs_idx = osp.join(self.abs_train_dir,idx)
             frames = sorted(os.listdir(abs_idx))
             frames_dirs = []
             for frame_idx, frame in enumerate(frames):
                 
                 frames_dirs.append(osp.join(abs_idx, frame))
-                if (( frame_idx+1) % TRACKLET_LENGTH) == 0:        
+                if (( frame_idx+1) % TRACKLET_LENGTH) == 0:  
+                    
                     tracklets.append([frames_dirs, int(idx), 0])
                     frames_dirs = []
             
-                
-        
+        print('tracklets')
+        print(tracklets)
         return tracklets
     
     
     
     def _prepare_validation(self, gallery_query_ratio):
+        #validation on same which train
         """"
         selects 2 random videos and creates query and gallery sets, where: len(query):len(gallery) == 1 : gallery_query_ratio
         """
-        val_dir = 'VisDrone2019-MOT-val\\'
-        abs_val_dir = 'D:\\Drone_object_tracking\\reid-data\\VisDrone2019-MOT-val\\'
+        #val_dir = 'VisDrone2019-MOT-val\\'
+        #abs_val_dir = 'D:\\Drone_object_tracking\\reid-data\\VisDrone2019-MOT-val\\'
         tracklets = []
-        for val_name in random.choices(os.listdir(abs_val_dir), k=2):
-            abs_val_video_dir = osp.join(abs_val_dir, val_name)
-            for idx in os.listdir(abs_val_video_dir):
-                abs_idx = osp.join(abs_val_video_dir,idx)
-                frames = sorted(os.listdir(abs_idx))
-                frames_dirs = []
-                for frame_idx, frame in enumerate(frames):
-                    
-                    frames_dirs.append(osp.join(abs_idx, frame))
-                    if( (frame_idx + 1) % TRACKLET_LENGTH ) == 0:        
-                        tracklets.append([frames_dirs, int(idx), 0])
-                        frames_dirs = []
+        
+        for idx in os.listdir(self.abs_train_dir):
+            abs_idx = osp.join(self.abs_train_dir,idx)
+            frames = sorted(os.listdir(abs_idx))
+            frames_dirs = []
+            for frame_idx, frame in enumerate(frames):
+                
+                frames_dirs.append(osp.join(abs_idx, frame))
+                if( (frame_idx + 1) % TRACKLET_LENGTH ) == 0:        
+                    tracklets.append([frames_dirs, int(idx), 0])
+                    frames_dirs = []
                     
         query_idxs = random.sample(range(0, len(tracklets)), int(len(tracklets)/6))
         query = []
