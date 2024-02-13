@@ -7,7 +7,7 @@ from torch.utils.data.sampler import Sampler, RandomSampler, SequentialSampler
 
 AVAI_SAMPLERS = [
     'RandomIdentitySampler', 'SequentialSampler', 'RandomSampler',
-    'RandomDomainSampler', 'RandomDatasetSampler'
+    'RandomDomainSampler', 'RandomDatasetSampler', 'CustomDatasetSampler'
 ]
 
 
@@ -75,7 +75,8 @@ class RandomIdentitySampler(Sampler):
                 final_idxs.extend(batch_idxs)
                 if len(batch_idxs_dict[pid]) == 0:
                     avai_pids.remove(pid)
-
+        
+        print('final_idxs',final_idxs)
         return iter(final_idxs)
 
     def __len__(self):
@@ -201,7 +202,96 @@ class RandomDatasetSampler(Sampler):
     def __len__(self):
         return self.length
 
+class CustomDatasetSampler(Sampler):
+    """
+    if ends less 
+    """
+    def __init__(self, data_source, batch_size, num_instances):
+        if batch_size < num_instances:
+            raise ValueError(
+                'batch_size={} must be no less '
+                'than num_instances={}'.format(batch_size, num_instances)
+            )
 
+        self.data_source = data_source
+        self.batch_size = batch_size
+        self.num_instances = num_instances
+        self.num_pids_per_batch = self.batch_size // self.num_instances
+        self.index_dic = defaultdict(list)
+        for index, items in enumerate(data_source):
+            dsetid = items[3]  # Assuming dsetid is at index 3
+            pid = items[1]
+            #print('dsetid, pid',dsetid,pid)
+            self.index_dic[(dsetid, pid)].append(index)
+        self.dsetid_pids = list(self.index_dic.keys())
+        assert len(self.dsetid_pids) >= self.num_pids_per_batch
+
+        # Estimate number of examples in an epoch
+        # TODO: Improve precision
+        self.length = 0
+        for dsetid_pid in self.dsetid_pids:
+            idxs = self.index_dic[dsetid_pid]
+            num = len(idxs)
+            if num < self.num_instances:
+                num = self.num_instances
+            self.length += num - num % self.num_instances
+
+    def __iter__(self):
+        batch_idxs_dict = defaultdict(list)
+
+        for dsetid_pid in self.dsetid_pids:
+            idxs = copy.deepcopy(self.index_dic[dsetid_pid])
+            if len(idxs) < self.num_instances:
+                idxs = np.random.choice(
+                    idxs, size=self.num_instances, replace=True
+                )
+            random.shuffle(idxs)
+            batch_idxs = []
+            for idx in idxs:
+                batch_idxs.append(idx)
+                if len(batch_idxs) == self.num_instances:
+                    batch_idxs_dict[dsetid_pid].append(batch_idxs)
+                    batch_idxs = []
+
+        avai_dsetid_pids = copy.deepcopy(self.dsetid_pids)
+        final_idxs = []
+        
+        def sample_from_same_dataset(avai_dsetid_pids):#THIS FUNCTION NOT SURE CORRECt
+            i = random.randint(0,1)
+            s = ( np.array(avai_dsetid_pids) [np.array(avai_dsetid_pids)[:,0] == i] ).tolist()
+            
+            #print('s',s)
+            if len(s) == 0:#if doesnt exist with this dsetid
+                s = ( np.array(avai_dsetid_pids) [np.array(avai_dsetid_pids)[:,0] == (1 - i)] ).tolist()
+                
+            if self.num_pids_per_batch > len(s):
+                return []
+            s = random.sample(s, self.num_pids_per_batch)#шлет нахер
+            
+            return [tuple(i) for i in s ]
+        #print('batch_idxs_dict',batch_idxs_dict.keys())
+        
+        while len(avai_dsetid_pids) >= self.num_pids_per_batch:
+            i = random.randint(0,1)
+            selected_dsetid_pids = sample_from_same_dataset(avai_dsetid_pids)
+            if selected_dsetid_pids == []:#NOT SURE CORRECT
+                break#
+            #print('selected_dsetid_pids', selected_dsetid_pids)
+            for pid in selected_dsetid_pids:
+                
+                
+                batch_idxs = batch_idxs_dict[pid].pop(0) #deletes twice if sample_from_same_dataset samples multiple same
+                
+                final_idxs.extend(batch_idxs)
+                if len(batch_idxs_dict[pid]) == 0:
+                    avai_dsetid_pids.remove(pid)
+            
+        #print('final_idxs',final_idxs)
+        return iter(final_idxs)
+
+    def __len__(self):
+        return self.length
+    
 def build_train_sampler(
     data_source,
     train_sampler,
@@ -241,5 +331,11 @@ def build_train_sampler(
 
     elif train_sampler == 'RandomSampler':
         sampler = RandomSampler(data_source)
+        
+    elif train_sampler=='CustomDatasetSampler':
+        sampler = CustomDatasetSampler(data_source, batch_size, num_instances)
 
     return sampler
+
+
+

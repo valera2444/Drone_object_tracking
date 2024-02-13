@@ -12,7 +12,7 @@ from .. import VideoDataset
 #REMADE ID'S !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #transform shouldnt be None
 TRACKLET_LENGTH = 10
-class VisDrone2019MOT_uav0000013_01073_v(VideoDataset):
+class VisDrone2019MOT_uav0000072_04488_v(VideoDataset):
     #dataset_dir = 'VisDrone2019-MOT\\'#incorrect
 
     def __init__(self, root='',video_name='',gallery_query_ratio=6, **kwargs):
@@ -39,11 +39,11 @@ class VisDrone2019MOT_uav0000013_01073_v(VideoDataset):
         #query = ...
         #gallery = ...
 
-        super(VisDrone2019MOT_uav0000013_01073_v, self).__init__(train, query, gallery, **kwargs)
+        super(VisDrone2019MOT_uav0000072_04488_v, self).__init__(train, query, gallery, **kwargs)
         
     def _prepare_train(self):
         train_dir = 'VisDrone2019-MOT-train\\'
-        dataset_name = 'uav0000013_01073_v\\'
+        dataset_name = 'uav0000072_04488_v\\'
         self.abs_train_dir = osp.join(self.root,train_dir, dataset_name)
         tracklets = []
         for idx in os.listdir(self.abs_train_dir):
