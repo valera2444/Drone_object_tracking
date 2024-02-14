@@ -76,7 +76,7 @@ class RandomIdentitySampler(Sampler):
                 if len(batch_idxs_dict[pid]) == 0:
                     avai_pids.remove(pid)
         
-        print('final_idxs',final_idxs)
+        #print('final_idxs',final_idxs)
         return iter(final_idxs)
 
     def __len__(self):
@@ -203,9 +203,60 @@ class RandomDatasetSampler(Sampler):
         return self.length
 
 class CustomDatasetSampler(Sampler):
+    
+    def __init__(self, data_source, batch_size, num_instances):
+        if batch_size < num_instances:
+            raise ValueError(
+                'batch_size={} must be no less '
+                'than num_instances={}'.format(batch_size, num_instances)
+            )
+
+        self.data_source = data_source
+        self.batch_size = batch_size
+        self.num_instances = num_instances
+        self.num_pids_per_batch = self.batch_size // self.num_instances
+        self.index_dic = defaultdict(list)
+        self.length = len(list(self.__iter__()))
+        
+    def __iter__(self):
+        datasets = defaultdict(list)
+        for item in self.data_source:
+            datasets[item[3]].append(item)
+            
+        def creates_batches(indices):
+            new_indicies = []
+            batch = []
+            for idx in range(len(indices)):
+                batch.append(indices[idx])
+                if (idx+1) % self.batch_size == 0:
+                    new_indicies.append(batch)
+                    batch = []
+                   
+            return new_indicies
+        ds = []
+        cur_idx = 0
+        
+        for k, v in datasets.items():
+            idxs = list(RandomIdentitySampler(v, batch_size=self.batch_size, num_instances=self.num_instances).__iter__())
+            batches = np.array( creates_batches(idxs) ) # indexes for batches inside one datsaset
+            
+            batches+=cur_idx
+            cur_idx+=len(v)
+            
+            ds.append(batches)
+            
+        
+        all_batches_idxs = np.concatenate(ds)
+        np.random.shuffle(all_batches_idxs)
+        #print(all_batches_idxs)
+        final_idxs = np.concatenate(all_batches_idxs)
+        return iter(final_idxs)
+
+    def __len__(self):
+        return self.length
     """
-    if ends less 
-    """
+class CustomDatasetSampler(Sampler):
+    
     def __init__(self, data_source, batch_size, num_instances):
         if batch_size < num_instances:
             raise ValueError(
@@ -291,7 +342,7 @@ class CustomDatasetSampler(Sampler):
 
     def __len__(self):
         return self.length
-    
+    """
 def build_train_sampler(
     data_source,
     train_sampler,

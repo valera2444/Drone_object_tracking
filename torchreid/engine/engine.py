@@ -322,6 +322,7 @@ class Engine(object):
             print('##### Evaluating {} ({}) #####'.format(name, domain))
             query_loader = self.test_loader[name]['query']
             gallery_loader = self.test_loader[name]['gallery']
+            
             rank1, mAP = self._evaluate(
                 dataset_name=name,
                 query_loader=query_loader,
@@ -363,6 +364,7 @@ class Engine(object):
             f_, pids_, camids_ = [], [], []
             for batch_idx, data in enumerate(data_loader):
                 imgs, pids, camids = self.parse_data_for_eval(data)
+                #print(pids, camids)
                 if self.use_gpu:
                     imgs = imgs.cuda()
                 end = time.time()
@@ -395,6 +397,8 @@ class Engine(object):
         print(
             'Computing distance matrix with metric={} ...'.format(dist_metric)
         )
+        #print('qf',qf.size())
+        #print('gf',gf.size())
         distmat = metrics.compute_distance_matrix(qf, gf, dist_metric)
         distmat = distmat.numpy()
 

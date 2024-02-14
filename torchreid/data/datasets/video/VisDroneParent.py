@@ -12,13 +12,13 @@ from .. import VideoDataset
 #REMADE ID'S !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #transform shouldnt be None
 TRACKLET_LENGTH = 10
-class VisDrone2019MOT_uav0000124_00944_v(VideoDataset):
+class VisDroneParent(VideoDataset):
     #dataset_dir = 'VisDrone2019-MOT\\'#incorrect
 
-    def __init__(self, root='',video_name='',gallery_query_ratio=6, **kwargs):
+    def __init__(self, root='',gallery_query_ratio=6, **kwargs):
         self.root = root    #D:/Drone_object_tracking/reid-data
-        self.video_name = video_name
-        #self.dataset_dir = osp.join(self.root, self.dataset_dir)
+        
+       
 
         # All you need to do here is to generate three lists,
         # which are train, query and gallery.
@@ -39,12 +39,11 @@ class VisDrone2019MOT_uav0000124_00944_v(VideoDataset):
         #query = ...
         #gallery = ...
 
-        super(VisDrone2019MOT_uav0000124_00944_v, self).__init__(train, query, gallery, **kwargs)
+        super(VisDroneParent, self).__init__(train, query, gallery, **kwargs)
         
     def _prepare_train(self):
-        train_dir = 'VisDrone2019-MOT-train\\'
-        dataset_name = 'uav0000124_00944_v\\'                                   #ERROR HERE
-        self.abs_train_dir = osp.join(self.root,train_dir, dataset_name)
+        print('self.video_name',self.video_name)
+        self.abs_train_dir = osp.join(self.root, self.video_name)
         tracklets = []
         for idx in os.listdir(self.abs_train_dir):
             abs_idx = osp.join(self.abs_train_dir,idx)
@@ -96,4 +95,5 @@ class VisDrone2019MOT_uav0000124_00944_v(VideoDataset):
         #print('VusDrone.py')
         #print(query)
         #print(gallery)
+        random.shuffle(gallery)
         return query, gallery
