@@ -15,7 +15,7 @@ GREEN = (0, 255, 0)
 RED = (0, 0, 255)
 
 
-def visualize_ranked_results(
+def visualize_ranked_results(    #WORKS ONLY FOR MY VISDRONE
     distmat, dataset, data_type, width=128, height=256, save_dir='', topk=10
 ):
     """Visualizes ranked results.
@@ -47,6 +47,15 @@ def visualize_ranked_results(
     assert num_g == len(gallery)
 
     indices = np.argsort(distmat, axis=1)
+    
+    def get_last_two_dirs(path):
+        # Split the path into directories
+        dirs = path.split(osp.sep)
+    
+        # Extract the last two directories
+        last_two_dirs = dirs[-2]+'_'+osp.splitext(dirs[-1])[0]
+        
+        return last_two_dirs
 
     def _cp_img_to(src, dst, rank, prefix, matched=False):
         """
@@ -67,12 +76,17 @@ def visualize_ranked_results(
                 dst = osp.join(dst, prefix + '_top' + str(rank).zfill(3))
             mkdir_if_missing(dst)
             for img_path in src:
-                shutil.copy(img_path, dst)
+                print('img_path',img_path)
+                #dst = dst + get_last_two_dirs(img_path)+'.jpg'
+                f_name = osp.join(dst , get_last_two_dirs(img_path)+'.jpg')
+                print('f_name',f_name)
+                shutil.copy(img_path, f_name)
         else:
             dst = osp.join(
                 dst, prefix + '_top' + str(rank).zfill(3) + '_name_' +
                 osp.basename(src)
             )
+            #file_name = 
             shutil.copy(src, dst)
 
     for q_idx in range(num_q):
@@ -99,17 +113,27 @@ def visualize_ranked_results(
             )
             grid_img[:, :width, :] = qimg
         else:
+            #print('qimg_path_name',qimg_path_name)
+        
+            
             qdir = osp.join(
-                save_dir, osp.basename(osp.splitext(qimg_path_name)[0])
+                save_dir, get_last_two_dirs(qimg_path_name)#osp.basename(osp.splitext(qimg_path_name)[0])
             )
+            
+            #print('get_last_two_dirs(qimg_path_name)',get_last_two_dirs(qimg_path_name))
             mkdir_if_missing(qdir)
             _cp_img_to(qimg_path, qdir, rank=0, prefix='query')
 
         rank_idx = 1
+        #print('q_idx',q_idx)
+        #print('indices[q_idx, :]',indices[q_idx, :]) # в indicies по индексу q_idx лежат инлексы галереи в порядке возрастания расстояний?
         for g_idx in indices[q_idx, :]:
+            
             gimg_path, gpid, gcamid = gallery[g_idx][:3]
-            invalid = (qpid == gpid) & (qcamid == gcamid)
-
+            print(f'rank_idx {rank_idx},{gpid},{qpid}')
+            
+            #invalid = (qpid == gpid) & (qcamid == gcamid)
+            invalid = False
             if not invalid:
                 matched = gpid == qpid
                 if data_type == 'image':
@@ -132,6 +156,8 @@ def visualize_ranked_results(
                     ) * width + rank_idx*GRID_SPACING + QUERY_EXTRA_SPACING
                     grid_img[:, start:end, :] = gimg
                 else:
+                    #print('rank_idx',rank_idx)
+                    #print('gimg_path',gimg_path) #one tracklet from galery
                     _cp_img_to(
                         gimg_path,
                         qdir,
