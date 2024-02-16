@@ -11,7 +11,7 @@ import numpy as np
 from .. import VideoDataset
 #REMADE ID'S !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #transform shouldnt be None
-TRACKLET_LENGTH = 10
+TRACKLET_LENGTH = 15
 class VisDroneParent(VideoDataset):
     #dataset_dir = 'VisDrone2019-MOT\\'#incorrect
 
@@ -34,7 +34,11 @@ class VisDroneParent(VideoDataset):
         # - train, query and gallery share the same camid scope (e.g.
         #   camid=0 in train refers to the same camera as camid=0
         #   in query/gallery).
+        
         train = self._prepare_train()
+        if self.__class__.query_idxs == None:
+            self.__class__.init_idxs(len(train))
+            
         query, gallery = self._prepare_validation(gallery_query_ratio)
         #query = ...
         #gallery = ...
@@ -82,18 +86,59 @@ class VisDroneParent(VideoDataset):
                 if( (frame_idx + 1) % TRACKLET_LENGTH ) == 0:        
                     tracklets.append([frames_dirs, int(idx), 0])
                     frames_dirs = []
-                    
-        query_idxs = random.sample(range(0, len(tracklets)), int(len(tracklets)/6))
+        
+       
+        query_idxs = self.__class__.query_idxs
         query = []
+        
         for i in query_idxs:
+            
             query.append(tracklets[i])
             
+            
         gallery = []
+        #print('gallery')
         for i in range(len(tracklets)):
             if i not in query_idxs:
                 gallery.append(tracklets[i])
-        #print('VusDrone.py')
-        #print(query)
-        #print(gallery)
+                #print(i, end=' ')
+                
+                
+        gtr = []
+        for track in gallery:
+            #print('track', track[0])
+            gtr += track[0]
+            
+        qtr = []
+        for track in query:
+            #print('track', track[0])
+            qtr += track[0]
+
+        """print('len(gtr)',len(gtr))
+        print('len(set(gtr))',len(set(gtr)))
+        print('len(qtr)',len(qtr))
+        print('len(set(qtr))',len(set(qtr)))
+
+        print('VisDrone Parent join',set(qtr).intersection(set(gtr)))"""
+        
         random.shuffle(gallery)
-        return query, gallery
+        return query, gallery#no inersection
+    
+    
+"""
+gtr = []
+for track in gallery:
+    #print('track', track[0])
+    gtr += track[0]
+    
+qtr = []
+for track in query:
+    #print('track', track[0])
+    qtr += track[0]
+
+print('len(gtr)',len(gtr))
+print('len(set(gtr))',len(set(gtr)))
+print('len(qtr)',len(qtr))
+print('len(set(qtr))',len(set(qtr)))
+
+print('join',set(qtr).intersection(set(gtr)))"""
