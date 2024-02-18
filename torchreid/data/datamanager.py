@@ -64,6 +64,11 @@ class DataManager(object):
     def num_train_pids(self):
         """Returns the number of training person identities."""
         return self._num_train_pids
+    
+    @property
+    def max_train_pid(self):
+        """Returns the number of training person identities."""
+        return self._max_train_pid
 
     @property
     def num_train_cams(self):
@@ -209,7 +214,8 @@ class ImageDataManager(DataManager):
 
         self._num_train_pids = trainset.num_train_pids
         self._num_train_cams = trainset.num_train_cams
-
+        self._max_train_pid = trainset.max_train_pid
+        
         self.train_loader = torch.utils.data.DataLoader(
             trainset,
             sampler=build_train_sampler(
@@ -461,7 +467,8 @@ class VideoDataManager(DataManager):
 
         self._num_train_pids = trainset.num_train_pids
         self._num_train_cams = trainset.num_train_cams
-
+        self._max_train_pid = trainset.max_train_pid
+        
         train_sampler = build_train_sampler(
             trainset.train,
             train_sampler,

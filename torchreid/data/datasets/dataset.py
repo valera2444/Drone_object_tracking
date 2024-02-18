@@ -73,6 +73,7 @@ class Dataset(object):
         self.num_train_pids = self.get_num_pids(self.train)
         self.num_train_cams = self.get_num_cams(self.train)
         self.num_datasets = self.get_num_datasets(self.train)
+        self.max_train_pid = self.get_max_pid(self.train)
 
         if self.combineall:
             self.combine_all()
@@ -155,6 +156,17 @@ class Dataset(object):
             pid = items[1]
             pids.add(pid)
         return len(pids)
+    
+    def get_max_pid(self, data):
+        """Returns the number of training person identities.
+
+        Each tuple in data contains (img_path(s), pid, camid, dsetid).
+        """
+        pids = set()
+        for items in data:
+            pid = items[1]
+            pids.add(pid)
+        return max(pids)
 
     def get_num_cams(self, data):
         """Returns the number of training cameras.
