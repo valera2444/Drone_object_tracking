@@ -4,6 +4,10 @@ import numpy as np
 import torch
 import motmetrics as mm
 from PIL import Image
+import os
+import os.path as osp
+import shutil
+
 def write_time_to_df(video_name=None, resized_to=None, source_width=None, source_height=None, avg_reading_time=None,
                      avg_resizing_time=None,avg_yolo_time=None, avg_predictor_time=None,avg_drawing_time=None,avg_fps_time=None):
     """
@@ -208,3 +212,160 @@ def usingPIL(f):
     im = Image.open(f)
     return np.asarray(im)
 
+
+def visdrone_to_df(video_root_dir, video_annot_dir, video_seq_dir):
+    """
+    converts visdrone from txt to dataframes. Each video - one dataframe
+    params:
+    video_root_dir = 'D:\\Drone_object_tracking\\VisDrone2019-MOT-train\\' | 'D:\\Drone_object_tracking\\VisDrone2019-MOT-val\\'
+    
+    video_annot_dir = 'sequences\\'
+    video_seq_dir = 'annotations\\'
+
+    """
+    dfs = []
+    dirs = os.listdir(osp.join(video_root_dir,video_seq_dir))
+    
+    for name in dirs:
+        dfs.append(video_annot_txt_to_dataframe(osp.join(video_root_dir,video_annot_dir,name+'.txt')))
+        print(f'{name} converted to df')
+    return dfs
+#dfs.append(video_annot_txt_to_dataframe(osp.join(video_train_root_dir,annot_train_dir,name+'.txt')))
+#dirs = os.listdir(osp.join(video_root_dir,sequences_train_dir))
+def write_from_df(dfs,video_root_dir,video_annot_dir, video_seq_dir, save_dir ):
+    """
+    write from dataframe to file system. Data will have next form:
+    -root
+    --video1
+    ---id1
+    ----img1
+    ----img2
+    ----....
+    ---id2
+    ----img1
+    ----img2
+    --video2
+    ---id1
+    ----img1
+    ----img2
+    ---id2
+    ----img1
+    ----img2
+    ----....
+    params:
+    dfs - dataframes with source data
+    video_root_dir = 'D:\\Drone_object_tracking\\VisDrone2019-MOT-train\\' | 'D:\\Drone_object_tracking\\VisDrone2019-MOT-val\\'
+    video_annot_dir = 'sequences\\'
+    video_seq_dir = 'annotations\\'
+    save_dir - where to store data in a new form
+    """
+    dirs = os.listdir(osp.join(video_root_dir,video_seq_dir))
+
+    for (name,df) in zip(dirs, dfs):#для 1го видео
+
+            frame_pathes = [osp.join(video_root_dir, video_seq_dir, name, f_n) \
+                            for f_n in os.listdir(osp.join(video_root_dir, video_seq_dir,name))]
+
+            #print(frame_pathes)
+            for frame_id in pd.unique(df['frame_index']):
+                df_per_frame_id = df[df['frame_index'] == frame_id]
+
+                id_counter = 1    #ids unique per video
+
+                img = cv2.imread(frame_pathes[frame_id - 1])
+                #print(img)
+                for row_in_image in df_per_frame_id.iterrows():
+
+                    f_i,target_id,left_top_x,left_top_y,width,height,score,category,truncation,occlusion=list(row_in_image)[1]
+
+                    id_path = osp.join(save_dir,name,str(target_id))
+                    if not os.path.exists(id_path):
+                        os.makedirs(id_path)
+
+
+                    cv2.imwrite(osp.join(id_path,str(frame_id)+'.jpg'), img[left_top_y:left_top_y+height,
+                                                                            left_top_x:left_top_x+width])
+                    
+            print(f'{name} proccessed and written')
+    
+def convert_train(video_train_root_dir,annot_dir,sequences_dir ,save_root_train_dir):
+    """
+    converts data to a form convinient for ReID network
+    """
+    dfs = visdrone_to_df(video_train_root_dir,annot_dir,sequences_dir )
+    write_from_df(dfs,video_train_root_dir,annot_dir,sequences_dir,save_root_train_dir  )
+    
+def convert_validation(video_val_root_dir,annot_dir,sequences_dir,save_root_val_dir ):
+    """
+    converts data to a form convinient for ReID network
+    """
+    dfs = visdrone_to_df(video_val_root_dir,annot_dir,sequences_dir )
+    write_from_df(dfs,video_val_root_dir,annot_dir,sequences_dir,save_root_val_dir  )
+
+def copy_with_unique_idxs(src_dir, new_dir, start_with_train = 0,start_with_val = 0 ):
+    """
+    util function for renamning persons ID to be unique among all datasets. Creates new folder
+    
+    params:
+    src_dir - directory with source data.
+    new_dir - new folder to copy data
+    start_with_train - index of train sequence in file system which to start copy with.
+    start_with_val - index of validayion sequence in file system which to start copy with.
+    """
+    root_copy = src_dir
+    root_actual = new_dir
+    train_path, val_path = osp.join(root_copy,os.listdir(root_copy)[0]), osp.join(root_copy,os.listdir(root_copy)[1])
+    #for idx, train_seq in enumerate(os.listdir(train_path)):
+    #    new_train_seq = osp.join(root_actual,'VisDrone2019-MOT-train',train_seq)
+    #    if not os.path.exists(new_train_seq):
+    #        os.makedirs(new_train_seq)
+    #    old_train_seq_path = osp.join(train_path,train_seq )
+    #    for pid in os.listdir(old_train_seq_path):
+
+    #        old_train_pid_seq = osp.join(old_train_seq_path,pid )
+    #        new_train_pid_seq = osp.join(new_train_seq, str(idx*10000+int(pid)))
+    #        shutil.copytree(old_train_pid_seq,new_train_pid_seq, dirs_exist_ok = True )
+
+    #    print('train sequence:',train_seq)
+        
+    i_val = 0
+    for idx, val_seq in enumerate(os.listdir(val_path)):
+        if i_val < start_with_val:
+            i_val += 1
+            continue
+        new_val_seq = osp.join(root_actual,'VisDrone2019-MOT-val',val_seq)
+        if not os.path.exists(new_val_seq):
+            os.makedirs(new_val_seq)
+        old_val_seq_path = osp.join(val_path,val_seq )
+        for pid in os.listdir(old_val_seq_path):
+
+            old_val_pid_seq = osp.join(old_val_seq_path,pid )
+            new_val_pid_seq = osp.join(new_val_seq, str(idx*10000+int(pid)))
+            shutil.copytree(old_val_pid_seq,new_val_pid_seq, dirs_exist_ok = True )
+
+        print('validation sequence:',val_seq)
+        
+def create_videos(dir_path_source_sequences):
+    """
+    creates videos for all sequences from dir_path_source_sequences
+    """
+    image_folder = dir_path_source_sequences
+    video_folder = '\\videos'
+    video_names = [img for img in os.listdir(image_folder)]
+    #width,height = 10,10
+
+    for name in video_names:
+        #print(next(os.walk(image_folder+'\\'+name))[2][0])
+        frame = cv2.imread(os.path.join(image_folder,name,next(os.walk(image_folder+'\\'+name))[2][0]))
+
+        height, width, layers = frame.shape
+        print(video_folder+'\\'+name)
+        video = cv2.VideoWriter("D:\\Drone_object_tracking\\"+video_folder+'\\'+name+'.avi', 0, 24, (width,height))
+
+        for img in os.listdir(image_folder+'\\'+name):
+            video.write(cv2.imread(os.path.join(image_folder,name,img)))
+
+        #print(name)
+
+    cv2.destroyAllWindows()
+    video.release()
