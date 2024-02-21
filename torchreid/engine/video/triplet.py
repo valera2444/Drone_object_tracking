@@ -1,7 +1,13 @@
 from __future__ import division, print_function, absolute_import
 import torch
 
+from torchreid import metrics
+from torchreid.losses import TripletLoss, CrossEntropyLoss
+
 from torchreid.engine.image import ImageTripletEngine
+
+import torch
+from collections import Counter
 
 
 class VideoTripletEngine(ImageTripletEngine):
@@ -111,11 +117,28 @@ class VideoTripletEngine(ImageTripletEngine):
         # c: channel depth
         # h: height
         # w: width
+        
+        def convert_outputs(outputs):
+            k = self.datamanager.seq_len
+            n = outputs.size(0)
+            result = []
+            for i in range(n // k):
+                window = outputs[i * k: (i + 1) * k]
+                counts = Counter(window)
+                most_common = counts.most_common(1)[0][0]
+                result.append(most_common)
+                
+            #print('RESs',result,'triplet 131')
+            result_tensor = torch.stack(result, dim=0)
+            #print('RESs',result,'triplet 131')
+            return result_tensor
+        
         b, s, c, h, w = input.size()
         input = input.view(b * s, c, h, w)
         outputs, features = [],[]
         if self.model.training == True:
             outputs, features = self.model(input)
+            outputs = convert_outputs(outputs)
         else:
             features = self.model(input)
         #print(features)
@@ -124,7 +147,8 @@ class VideoTripletEngine(ImageTripletEngine):
             features = torch.mean(features, 1)
         else:
             features = torch.max(features, 1)[0]
-            
+        
+        
         if self.model.training == True:
             return outputs, features
         else:
@@ -132,7 +156,8 @@ class VideoTripletEngine(ImageTripletEngine):
     
     def forward_backward(self, data):      #new method
         
-    
+        
+        
         def prepare(data):
             return data['img'], data['pid']
         
@@ -141,13 +166,18 @@ class VideoTripletEngine(ImageTripletEngine):
             imgs = imgs.cuda()
             pids = pids.cuda()
             
-        #print('pids',pids, 'triplet.py videdo 144')
+            
         outputs, features = self.extract_features(imgs)#BUG on validation
             
 
         loss = 0
         loss_summary = {}
-
+        #print('videotriplet')
+        #print('features',features.size())
+        #print('pids',pids.size())
+        #print('outputs',outputs.size())
+        #outputs = convert_outputs(outputs)
+        #print('neew outputs',outputs.size())
         if self.weight_t > 0:
             loss_t = self.compute_loss(self.criterion_t, features, pids)
             loss += self.weight_t * loss_t

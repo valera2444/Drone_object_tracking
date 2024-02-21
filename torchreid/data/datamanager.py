@@ -439,6 +439,7 @@ class VideoDataManager(DataManager):
     ):
         self.num_instances = num_instances
         self.batch_size_train = batch_size_train
+        self.seq_len = seq_len
         super(VideoDataManager, self).__init__(
             sources=sources,
             targets=targets,

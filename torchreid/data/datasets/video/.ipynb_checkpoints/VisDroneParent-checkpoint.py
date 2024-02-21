@@ -11,7 +11,7 @@ import numpy as np
 from .. import VideoDataset
 #REMADE ID'S !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #transform shouldnt be None
-TRACKLET_LENGTH = 15
+TRACKLET_LENGTH = 3
 class VisDroneParent(VideoDataset):
     #dataset_dir = 'VisDrone2019-MOT\\'#incorrect
 
