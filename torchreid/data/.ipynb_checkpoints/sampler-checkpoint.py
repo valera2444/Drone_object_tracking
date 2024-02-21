@@ -26,7 +26,7 @@ class RandomIdentitySampler(Sampler):
                 'batch_size={} must be no less '
                 'than num_instances={}'.format(batch_size, num_instances)
             )
-        
+
         self.data_source = data_source
         self.batch_size = batch_size
         self.num_instances = num_instances

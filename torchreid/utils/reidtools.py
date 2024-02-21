@@ -76,10 +76,10 @@ def visualize_ranked_results(    #WORKS ONLY FOR MY VISDRONE
                 dst = osp.join(dst, prefix + '_top' + str(rank).zfill(3))
             mkdir_if_missing(dst)
             for img_path in src:
-                print('img_path',img_path)
+                #print('img_path',img_path)
                 #dst = dst + get_last_two_dirs(img_path)+'.jpg'
                 f_name = osp.join(dst , get_last_two_dirs(img_path)+'.jpg')
-                print('f_name',f_name)
+                #print('f_name',f_name)
                 shutil.copy(img_path, f_name)
         else:
             dst = osp.join(
@@ -130,7 +130,7 @@ def visualize_ranked_results(    #WORKS ONLY FOR MY VISDRONE
         for g_idx in indices[q_idx, :]:
             
             gimg_path, gpid, gcamid = gallery[g_idx][:3]
-            print(f'rank_idx {rank_idx},{gpid},{qpid}')
+            #print(f'rank_idx {rank_idx},{gpid},{qpid}')
             
             #invalid = (qpid == gpid) & (qcamid == gcamid)
             invalid = False
