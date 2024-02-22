@@ -50,8 +50,8 @@ class TripletLoss(nn.Module):
         
         dist_ap = torch.cat(dist_ap)
         dist_an = torch.cat(dist_an)
-        print('triplet 54')
-        print('dist_ap',dist_ap)
-        print('dist_an',dist_an)
+        #print('triplet 54')
+        #print('dist_ap',dist_ap)
+        #print('dist_an',dist_an)
         y = torch.ones_like(dist_an)
         return self.ranking_loss(dist_an, dist_ap, y)

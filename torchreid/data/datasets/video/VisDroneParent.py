@@ -11,10 +11,12 @@ import numpy as np
 from .. import VideoDataset
 #REMADE ID'S !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #transform shouldnt be None
-TRACKLET_LENGTH = 3
+TRACKLET_LENGTH = 15
 class VisDroneParent(VideoDataset):
     #dataset_dir = 'VisDrone2019-MOT\\'#incorrect
-
+    
+    cur_idx = 0
+    
     def __init__(self, root='',gallery_query_ratio=6, **kwargs):
         self.root = root    #D:/Drone_object_tracking/reid-data
         
@@ -58,9 +60,10 @@ class VisDroneParent(VideoDataset):
                 frames_dirs.append(osp.join(abs_idx, frame))
                 if (( frame_idx+1) % TRACKLET_LENGTH) == 0:  
                     
-                    tracklets.append([frames_dirs, int(idx), 0])
+                    #tracklets.append([frames_dirs, int(idx), 0])
+                    tracklets.append([frames_dirs, VisDroneParent.cur_idx, 0])
                     frames_dirs = []
-            
+            VisDroneParent.cur_idx += 1
         #print('tracklets')
         #print(tracklets)
         return tracklets
