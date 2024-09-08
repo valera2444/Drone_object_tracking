@@ -6,15 +6,17 @@ Libraries used:
 3) [MOT metrics](https://github.com/cheind/py-motmetrics.git). Used via pip
 4) [SORT](https://github.com/abewley/sort.git).Added as sort.py file
 
-docker_run.sh script provides an example of running docker container
-
-Docker image doesn't support GPU. You may run models on GPU via run.sh.
-
-Please create example_for_docker_image folder that must contain (this used only by docker):
-1) annotations.txt 
-2) Folder with seqence of image
-
 You may use run.sh as an example of running run.py file. For more info about it please run 
 ```
 python3.11 run.py -h
 ```
+
+docker_run.sh script provides an example of running docker container
+
+For running container with GPU you must have nvidia-container-toolkit installed. Image size - 7.65GB, optimization advisable.
+
+Please create example_for_docker_image folder that must contain (this used only by docker):
+1) annotations.txt 
+2) Folder with sequence of image
+
+
