@@ -13,7 +13,7 @@ python3.11 run.py -h
 
 docker_run.sh script provides an example of running docker container
 
-For running container with GPU you must have nvidia-container-toolkit installed. Image size - 7.65GB, optimization advisable.
+For running container with GPU you must have nvidia-container-toolkit installed. Image size - 6.72GB(6.1GB - site-packages).
 
 Please create example_for_docker_image folder that must contain (this used only by docker):
 1) annotations.txt 
